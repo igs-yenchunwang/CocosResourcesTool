@@ -1,0 +1,23 @@
+{
+    "check_change_csd": true,
+    "change_csd_path": "R:\\Develop\\iRich_Evo\\Inanna\\CocoStudioProject_PH\\Inanna\\cocosstudio\\InannaResource\\Inanna",
+    "check_customize_texturepacker": true,
+    "texturepacker_path": "C:/Program Files (x86)/CodeAndWeb/TexturePacker/bin/TexturePacker.exe",
+    "target_plist_path": "R:/GameCocos/HappyFish5/cocosstudio/fish_res/font/en",
+    "source_img_path": "R:/GameCocos/HappyFish5/cocosstudio/fish_res/font/en",
+    "max_size": 2048,
+    "bording_padding": 2,
+    "shape_padding": 2,
+    "check_find_png": true,
+    "check_find_jpg": true,
+    "check_find_plist": true,
+    "check_find_csd": true,
+    "find_path_proj": "R:/Develop/iRich_Evo/Inanna/CocoStudioProject_PH/Inanna/cocosstudio/InannaResource",
+    "compress_key": "sMts9LFKZyD1YB5zWQ9H9Jw6GvVJ2n65",
+    "compress_path": "R:/Develop/iRich_Evo/SouthPark/ClientCocos/Resources/InannaResource_PH/Inanna/plist",
+    "change_color_path": "",
+    "find_path_img": "R:/Develop/iRich_Evo/Inanna/CocoStudioProject_PH/Inanna/cocosstudio/InannaResource/Inanna",
+    "find_path_csd": "R:\\Develop\\iRich_Evo\\Inanna\\CocoStudioProject_PH\\Inanna\\cocosstudio\\InannaResource\\Inanna\\ui",
+    "check_make_plist": false,
+    "make_plist_path": "R:\\Develop\\iRich_Evo\\Inanna\\CocoStudioProject_PH\\Inanna\\cocosstudio\\InannaResource\\Inanna\\plist"
+}

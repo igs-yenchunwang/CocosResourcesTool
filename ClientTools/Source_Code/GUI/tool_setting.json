@@ -1,0 +1,19 @@
+{
+    "check_change_csd": false,
+    "change_csd_path": "",
+    "check_customize_texturepacker": false,
+    "texturepacker_path": "R:/Develop/iRich_Evo/Inanna/Tool/TexturePacker/TexturePacker.exe",
+    "target_plist_path": "",
+    "source_img_path": "",
+    "max_size": 1024,
+    "bording_padding": 1,
+    "shape_padding": 1,
+    "check_find_png": true,
+    "check_find_jpg": false,
+    "check_find_plist": false,
+    "check_find_csd": false,
+    "find_path_proj": "",
+    "compress_key": "",
+    "compress_path": "",
+    "change_color_path": ""
+}
