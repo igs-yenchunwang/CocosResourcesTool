@@ -3,6 +3,7 @@ import os
 import json
 import time
 import subprocess
+import shlex
 from functools import partial
 from common.ToolSetting import Setting
 from common.function import *
@@ -272,7 +273,12 @@ class ImgToPlist(QWidget):
 		originPath = os.getcwd()
 		imgPath = self.imgPath_input.text()
 		outputPath = self.plistPath_input.text()
-		os.chdir(imgPath)
+		
+		try:
+			os.chdir(imgPath)
+		except (OSError, FileNotFoundError) as e:
+			self.show_message_box(f"無法進入圖片目錄: {str(e)}")
+			return
 
 		dirList = self.get_all_select_folder()
 		generated_pngs = []  # 存儲生成的PNG檔案路徑
@@ -291,7 +297,10 @@ class ImgToPlist(QWidget):
 			if res == 1 or self.m_forceStop:
 				break
 
-		os.chdir(originPath)
+		try:
+			os.chdir(originPath)
+		except (OSError, FileNotFoundError) as e:
+			self.log_text_edit.append(f"警告: 無法回到原始目錄: {str(e)}\n")
 		
 		# 如果啟用TinyPNG壓縮，對生成的PNG檔案進行壓縮
 		if self.enable_tinypng.isChecked() and generated_pngs:
@@ -603,9 +612,16 @@ class ImgToPlist(QWidget):
 		self.m_setting["source_img_path"] = self.imgPath_input.text()
 		self.m_setting["target_plist_path"] = self.plistPath_input.text()
 
-		self.m_setting["max_size"] = int(self.texture_packer_maxSize_input.text())
-		self.m_setting["bording_padding"] = int(self.texture_packer_bording_padding_input.text())
-		self.m_setting["shape_padding"] = int(self.texture_packer_shape_padding_input.text())
+		try:
+			self.m_setting["max_size"] = int(self.texture_packer_maxSize_input.text() or "1024")
+			self.m_setting["bording_padding"] = int(self.texture_packer_bording_padding_input.text() or "0")
+			self.m_setting["shape_padding"] = int(self.texture_packer_shape_padding_input.text() or "0")
+		except ValueError:
+			# 如果轉換失敗，使用預設值
+			self.m_setting["max_size"] = 1024
+			self.m_setting["bording_padding"] = 0
+			self.m_setting["shape_padding"] = 0
+			self.show_message_box("數值設定格式錯誤，已重置為預設值")
 
 		# 保存TinyPNG設定
 		self.m_setting["enable_tinypng"] = self.enable_tinypng.isChecked()

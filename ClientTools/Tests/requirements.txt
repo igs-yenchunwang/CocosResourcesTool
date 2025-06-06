@@ -1,0 +1,15 @@
+# 測試環境依賴套件清單
+# Test environment dependencies
+
+# 核心功能依賴
+# Core dependencies
+requests>=2.25.0
+Pillow>=8.0.0
+
+# GUI 依賴（如果需要完整 GUI 測試）
+# GUI dependencies (if full GUI testing is needed)
+PyQt5>=5.15.0
+
+# 測試框架相關（通常內建，但某些環境可能需要）
+# Testing framework related (usually built-in, but some environments may need)
+unittest2>=1.1.0; python_version < "3.7"
