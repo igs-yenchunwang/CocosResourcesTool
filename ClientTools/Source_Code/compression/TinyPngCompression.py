@@ -113,7 +113,7 @@ def main(args):
             if url == "":
                 sys.exit(1)
                 return
-            compressController.DownloadPicWithUrl(url, args.picPath)
+            compressController.DownloadPicWithUrl(url, os.path.join(args.folderPath, file))
 
 if __name__ == "__main__":
     args = parse_args()
