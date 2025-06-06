@@ -6,6 +6,7 @@ import subprocess
 from functools import partial
 from common.ToolSetting import Setting
 from common.function import *
+from compression.TinyPngCompression import Compression
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -43,6 +44,7 @@ class ImgToPlist(QWidget):
 		self.m_plistMaxSize = 0			# 包plist的最大上限
 		self.m_outOfLimitList = []		# 超出上限的清單
 		self.m_folderListShow = False
+		self.m_compressor = Compression()	# TinyPNG壓縮器
 
 	def create_ui(self):
 		self.check_box_texturePacker = QCheckBox('自訂 TexturePacker.exe 的位置 (如果沒有設定環境變數，需要自定義texturepacker路徑)(需附上TexturePacker.exe)')
@@ -72,14 +74,23 @@ class ImgToPlist(QWidget):
 		self.folder_none_select = QPushButton('None')
 		self.folder_none_select.setFixedWidth(40)
 		self.fore_8888 = QCheckBox('強制包RGBA8888')
+		self.enable_tinypng = QCheckBox('包完後進行TinyPNG壓縮')
+		self.tinypng_key_label = QLabel('TinyPNG API Key:')
+		self.tinypng_key_input = QLineEdit()
+		self.tinypng_key_input.setPlaceholderText('輸入TinyPNG API Key (選填，有預設值)')
 
 		self.folder_list = QListWidget(self)
 		self.folder_list.hide()
 		self.folder_all_select.hide()
 		self.folder_none_select.hide()  # 初始化時隱藏
 		self.fore_8888.hide()
+		self.enable_tinypng.hide()
+		self.tinypng_key_label.hide()
+		self.tinypng_key_input.hide()
 		self.folder_all_select.clicked.connect(self.enable_all_folder)
 		self.folder_none_select.clicked.connect(self.disable_all_folder)
+		self.enable_tinypng.clicked.connect(self.save_setting)
+		self.tinypng_key_input.textChanged.connect(self.save_setting)
 
 		self.start_button = QPushButton('開始包plist')
 		self.start_button.clicked.connect(self.start_making_plist)
@@ -172,9 +183,15 @@ class ImgToPlist(QWidget):
 		self.more_option_btn.addWidget(self.folder_all_select)
 		self.more_option_btn.addWidget(self.folder_none_select)
 		self.more_option_btn.addWidget(self.fore_8888)
+		
+		self.tinypng_option = QVBoxLayout()
+		self.tinypng_option.addWidget(self.enable_tinypng)
+		self.tinypng_option.addWidget(self.tinypng_key_label)
+		self.tinypng_option.addWidget(self.tinypng_key_input)
 
 		self.more_option_layer = QVBoxLayout()
 		self.more_option_layer.addLayout(self.more_option_btn)
+		self.more_option_layer.addLayout(self.tinypng_option)
 		self.more_option_layer.addWidget(self.folder_list)
 
 		self.main_layer = QHBoxLayout()
@@ -258,15 +275,28 @@ class ImgToPlist(QWidget):
 		os.chdir(imgPath)
 
 		dirList = self.get_all_select_folder()
+		generated_pngs = []  # 存儲生成的PNG檔案路徑
+		
 		for folderName in dirList:
 			if not os.path.isdir(folderName):
 				continue
 			res = self.CreatePlistWithFolder(folderName, outputPath)
+			
+			# 如果成功生成plist，記錄PNG檔案路徑
+			if res == 0:
+				pngFile = os.path.join(outputPath, folderName + '.png')
+				if os.path.exists(pngFile):
+					generated_pngs.append(pngFile)
 
 			if res == 1 or self.m_forceStop:
 				break
 
 		os.chdir(originPath)
+		
+		# 如果啟用TinyPNG壓縮，對生成的PNG檔案進行壓縮
+		if self.enable_tinypng.isChecked() and generated_pngs:
+			self.compress_generated_pngs(generated_pngs)
+		
 		log_message = f'轉換結束!!!\n'
 		self.log_text_edit.append(log_message)
 		QApplication.processEvents()
@@ -330,11 +360,17 @@ class ImgToPlist(QWidget):
 			self.folder_all_select.hide()
 			self.folder_none_select.hide()
 			self.fore_8888.hide()
+			self.enable_tinypng.hide()
+			self.tinypng_key_label.hide()
+			self.tinypng_key_input.hide()
 		else:
 			self.folder_list.show()
 			self.folder_all_select.show()
 			self.folder_none_select.show()
 			self.fore_8888.show()
+			self.enable_tinypng.show()
+			self.tinypng_key_label.show()
+			self.tinypng_key_input.show()
 
 		self.m_folderListShow = not self.m_folderListShow
 
@@ -435,6 +471,61 @@ class ImgToPlist(QWidget):
 
 		return result.returncode
 
+	def compress_generated_pngs(self, png_files:list):
+		"""對生成的PNG檔案進行TinyPNG壓縮"""
+		log_message = f'開始進行TinyPNG壓縮...\n'
+		self.log_text_edit.append(log_message)
+		QApplication.processEvents()
+		
+		# 設定API Key
+		api_key = self.tinypng_key_input.text().strip()
+		if not api_key:
+			api_key = "sMts9LFKZyD1YB5zWQ9H9Jw6GvVJ2n65"  # 使用預設API Key
+		
+		self.m_compressor.SetKey(api_key)
+		
+		success_count = 0
+		fail_count = 0
+		
+		for png_file in png_files:
+			try:
+				log_message = f'正在壓縮: {os.path.basename(png_file)}\n'
+				self.log_text_edit.append(log_message)
+				QApplication.processEvents()
+				
+				# 獲取壓縮結果
+				res = self.m_compressor.GetCompressionRes(png_file)
+				if res == "":
+					log_message = f'壓縮失敗: {os.path.basename(png_file)}\n'
+					self.log_text_edit.append(log_message)
+					fail_count += 1
+					continue
+				
+				# 解析下載URL
+				url = self.m_compressor.ParseUrlFromRes(res)
+				if url == "":
+					log_message = f'解析URL失敗: {os.path.basename(png_file)}\n'
+					self.log_text_edit.append(log_message)
+					fail_count += 1
+					continue
+				
+				# 下載壓縮後的圖片
+				self.m_compressor.DownloadPicWithUrl(url, png_file)
+				log_message = f'壓縮完成: {os.path.basename(png_file)}\n'
+				self.log_text_edit.append(log_message)
+				success_count += 1
+				
+			except Exception as e:
+				log_message = f'壓縮異常: {os.path.basename(png_file)} - {str(e)}\n'
+				self.log_text_edit.append(log_message)
+				fail_count += 1
+			
+			QApplication.processEvents()
+		
+		log_message = f'TinyPNG壓縮完成! 成功: {success_count}, 失敗: {fail_count}\n'
+		self.log_text_edit.append(log_message)
+		QApplication.processEvents()
+
 	def check_stop(self, msg:str)->int:
 		msg_box = QMessageBox(self)
 		msg_box.setText(msg)
@@ -500,6 +591,10 @@ class ImgToPlist(QWidget):
 		self.texture_packer_bording_padding_input.setText(str(self.m_setting["bording_padding"]))
 		self.texture_packer_shape_padding_input.setText(str(self.m_setting["shape_padding"]))
 
+		# 載入TinyPNG設定
+		self.enable_tinypng.setChecked(self.m_setting.get("enable_tinypng", False))
+		self.tinypng_key_input.setText(self.m_setting.get("tinypng_api_key", ""))
+
 		self.update_folder_list()
 		
 	def save_setting(self):
@@ -511,6 +606,10 @@ class ImgToPlist(QWidget):
 		self.m_setting["max_size"] = int(self.texture_packer_maxSize_input.text())
 		self.m_setting["bording_padding"] = int(self.texture_packer_bording_padding_input.text())
 		self.m_setting["shape_padding"] = int(self.texture_packer_shape_padding_input.text())
+
+		# 保存TinyPNG設定
+		self.m_setting["enable_tinypng"] = self.enable_tinypng.isChecked()
+		self.m_setting["tinypng_api_key"] = self.tinypng_key_input.text()
 
 		self.m_settingMgr.save_setting(self.m_setting)
 
