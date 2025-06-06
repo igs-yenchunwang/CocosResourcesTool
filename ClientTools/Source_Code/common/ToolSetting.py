@@ -15,6 +15,7 @@ DEFAULT_SETTING = {\
 "max_size":1024,\
 "bording_padding":1,\
 "shape_padding":1,\
+"enable_tinypng_compress":False,\
 # csd 找路徑用
 "check_find_png":True,\
 "check_find_jpg":False,\
