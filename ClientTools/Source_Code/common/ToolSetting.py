@@ -24,6 +24,7 @@ DEFAULT_SETTING = {\
 # 壓縮圖片用
 "compress_key":"",\
 "compress_path":"",\
+"enable_tinypng_compression":False,\
 # 換顏色用
 "change_color_path":"",\
 }
